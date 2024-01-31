@@ -37,6 +37,7 @@ public class TicketSeller {
         Performance info = performanceRepository.findById(reserveInfo.getPerformanceId())
             .orElseThrow(EntityNotFoundException::new);
         String enableReserve = info.getIsReserve();
+
         if (enableReserve.equalsIgnoreCase("enable")) {
             // 1. 결제
             int price = info.getPrice();
