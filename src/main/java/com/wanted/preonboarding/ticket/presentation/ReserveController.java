@@ -1,10 +1,9 @@
 package com.wanted.preonboarding.ticket.presentation;
 
 import com.wanted.preonboarding.ticket.application.TicketSeller;
-import com.wanted.preonboarding.ticket.domain.dto.ReserveInfo;
-import com.wanted.preonboarding.ticket.domain.dto.ResponseDto;
-import com.wanted.preonboarding.ticket.domain.dto.ResponseEnum;
+import com.wanted.preonboarding.ticket.domain.dto.*;
 import com.wanted.preonboarding.ticket.domain.entity.Reservation;
+import com.wanted.preonboarding.ticket.infrastructure.repository.PerformanceRepository;
 import com.wanted.preonboarding.ticket.infrastructure.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +19,7 @@ public class ReserveController {
 
     private final TicketSeller ticketSeller;
     private final ReservationRepository reservationRepository;
+    private final PerformanceRepository performanceRepository;
 
     @PostMapping("/")
     public ResponseEntity reservation(@RequestBody ReserveInfo info) {
@@ -31,11 +31,10 @@ public class ReserveController {
 
         ResponseEnum reserveResult = ticketSeller.reserve(info);
         if(reserveResult.equals(ResponseEnum.SUCCESS)){
-            Reservation reservation = reservationRepository.findByNameAndPhoneNumber(info.getReservationName(), info.getReservationPhoneNumber());
+            Optional<Reservation> reservation = reservationRepository.findByNameAndPhoneNumber(info.getReservationName(), info.getReservationPhoneNumber());
             responseDto.setResponseCode(ResponseEnum.SUCCESS);
             responseDto.setMessage("reservation success");
             responseDto.setData(reservation);
-            System.out.println("reservation = " + reservation);
 
             return ResponseEntity.ok(responseDto);
         }else if(reserveResult.equals(ResponseEnum.ERROR)){
@@ -46,6 +45,25 @@ public class ReserveController {
             responseDto.setResponseCode(ResponseEnum.FAIL);
             responseDto.setMessage("performance is not enable");
             return new ResponseEntity(responseDto, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/")
+    public ResponseEntity isReservationExist(@RequestBody ReservationSearchDto searchDto){
+        ResponseDto dto = new ResponseDto();
+
+        Reservation reservation = ticketSeller.getReservation(searchDto);
+
+        if(reservation!= null){
+            ReservationResponseDto searchReservation = ticketSeller.getReservationResponse(reservation);
+            dto.setResponseCode(ResponseEnum.SUCCESS);
+            dto.setMessage("check is success");
+            dto.setData(searchReservation);
+            return ResponseEntity.ok(dto);
+        }else{
+            dto.setMessage("check is fail");
+            dto.setResponseCode(ResponseEnum.FAIL);
+            return new ResponseEntity(dto, HttpStatus.NOT_FOUND);
         }
     }
 

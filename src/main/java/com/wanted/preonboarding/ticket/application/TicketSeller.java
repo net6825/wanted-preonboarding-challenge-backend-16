@@ -1,8 +1,6 @@
 package com.wanted.preonboarding.ticket.application;
 
-import com.wanted.preonboarding.ticket.domain.dto.PerformanceInfo;
-import com.wanted.preonboarding.ticket.domain.dto.ReserveInfo;
-import com.wanted.preonboarding.ticket.domain.dto.ResponseEnum;
+import com.wanted.preonboarding.ticket.domain.dto.*;
 import com.wanted.preonboarding.ticket.domain.entity.Performance;
 import com.wanted.preonboarding.ticket.domain.entity.Reservation;
 import com.wanted.preonboarding.ticket.infrastructure.repository.PerformanceRepository;
@@ -13,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -31,6 +30,27 @@ public class TicketSeller {
 
     public PerformanceInfo getPerformanceInfoDetail(String name) {
         return PerformanceInfo.of(performanceRepository.findByName(name));
+    }
+    public Reservation getReservation(ReservationSearchDto dto){
+        Reservation reservation = reservationRepository.findByNameAndPhoneNumber(dto.getConsumerName(), dto.getConsumerPhoneNumber()).get();
+        return reservation;
+    }
+
+    public ReservationResponseDto getReservationResponse(Reservation reservation){
+
+        Performance findPerformance = performanceRepository.findById(reservation.getPerformanceId()).get();
+
+        ReservationResponseDto response = ReservationResponseDto.builder()
+                .round(reservation.getRound())
+                .seat(reservation.getSeat())
+                .line(reservation.getLine())
+                .performanceId(reservation.getPerformanceId())
+                .performanceName(findPerformance.getName())
+                .consumerName(reservation.getName())
+                .consumerPhoneNumber(reservation.getPhoneNumber())
+                .build();
+
+        return response;
     }
 
     public ResponseEnum reserve(ReserveInfo reserveInfo) {
